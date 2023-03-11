@@ -3,23 +3,8 @@ import random
 import fixieai
 import uwtools
 
-BASE_PROMPT = """I'm an agent that rolls virtual dice!"""
+BASE_PROMPT = """I'm your virtual UW academic advisor!"""
 FEW_SHOTS = """
-Q: Roll a d20
-Ask Func[roll]: 20 1
-Func[roll] says: 12
-A: You rolled a 12!
-
-Q: Roll two dice and blow on them first for good luck
-Ask Func[roll]: 6 2
-Func[roll] says: 4 3
-A: You rolled a 4 and a 3, with a total of 7.
-
-Q: Roll 3d8
-Ask Func[roll]: 8 3
-Func[roll] says: 5 3 8
-A: You rolled 5, 3, and 8, for a total of 16.
-
 Q: Show the description of CSE133
 Ask Func[get_class_information]: CSE133 Description
 Func[get_class_information] says: Intermediate data programming. Topics include writing programs that manipulate different types of data; leveraging the growing ecosystem of tools and libraries for data programming; writing programs that are both efficient and elegant; and writing medium-scale programs (100 to 200 lines). Prerequisite: either CSE 122, CSE 123, CSE 142, CSE 143, or CSE 160.
@@ -40,8 +25,16 @@ Ask Func[get_class_information]: LING200 Credits
 Func[get_class_information] says: 5
 A: LING200 is a 5 credits class.
 
+Q: Build me a schedule
+A: Which UW Campus are you in?
+Q: Seattle
+A: Which quarter schedule should we build? ["AUT", "SPR", "WIN", "SUM"]
+Q: AUT
+A: How many credits do you want to take?
+Q: 15
+Ask Func[build_schedule]: AUT Seattle 15
 """
-agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS)
+agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS, conversational = True)
 
 
 @agent.register_func
@@ -52,7 +45,7 @@ def roll(query: fixieai.Message) -> str:
 
 
 course_catalog_dict = {}
-
+quarters = ["AUT", "SPR", "WIN", "SUM"]
 
 @agent.register_func
 def get_class_information(query: fixieai.Message) -> str:
@@ -62,3 +55,18 @@ def get_class_information(query: fixieai.Message) -> str:
         course_catalog_dict = uwtools.course_catalogs(struct='dict')
 
     return course_catalog_dict[class_code][category]
+
+@agent.register_func
+def build_schedule(query: fixieai.Message) -> str:
+    year = 2020 #get current year
+    quarter, campus, credits = query.text.split()
+    campuses = [campus]
+    classTaken = []
+    time_schedule = uwtools.time_schedules(struct='dict',campuses = campuses, year = year, quarter = quarter, include_datetime = True)
+    classes = check_prereq(classTaken)
+
+def check_prereq(classTaken) -> list:
+    classes = []
+    return classes
+
+
