@@ -25,6 +25,7 @@ Ask Func[get_class_information]: LING200 Credits
 Func[get_class_information] says: 5
 A: LING200 is a 5 credits class.
 
+
 Q: Build me a schedule
 A: Which UW Campus are you in?
 Q: Seattle
@@ -35,6 +36,7 @@ Q: 15
 Ask Func[build_schedule]: AUT Seattle 15
 """
 agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS, conversational = True)
+
 
 
 @agent.register_func
@@ -56,6 +58,25 @@ def get_class_information(query: fixieai.Message) -> str:
 
     return course_catalog_dict[class_code][category]
 
+def check_time_conflict(potential_classes, num_of_credit):
+    class_and_times = {}
+    for i in range(len(time_schedule)):
+        if time_schedule[i]['Course Name'] in potential_classes:
+            class_and_times[time_schedule[i]['Course Name']] = [
+                time_schedule[i]['Start'], time_schedule[i]['End']]
+
+    times = []
+    for c in potential_classes:
+        times.append([class_and_times[c], potential_classes[c]])
+
+    times.sort()
+    res = []
+    for i in range(len(times)):
+        if times[i][1] <= times[i+1][0]:
+            res.append(times[i][3])
+
+    return
+
 @agent.register_func
 def build_schedule(query: fixieai.Message) -> str:
     year = 2020 #get current year
@@ -68,5 +89,4 @@ def build_schedule(query: fixieai.Message) -> str:
 def check_prereq(classTaken) -> list:
     classes = []
     return classes
-
 
