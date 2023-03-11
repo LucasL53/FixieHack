@@ -3,7 +3,7 @@ import random
 import fixieai
 import uwtools
 
-BASE_PROMPT = """I'm an agent that rolls virtual dice!"""
+BASE_PROMPT = """I'm your virtual UW academic advisor!"""
 FEW_SHOTS = """
 Q: Show the description of CSE133
 Ask Func[get_class_information]: CSE133 Description
@@ -25,12 +25,18 @@ Ask Func[get_class_information]: LING200 Credits
 Func[get_class_information] says: 5
 A: LING200 is a 5 credits class.
 
-Q: Build me a scheule for winter quarter
-A: Which uw campus are you in?
+
+Q: Build me a schedule
+A: Which UW Campus are you in?
 Q: Seattle
-A:
+A: Which quarter schedule should we build? ["AUT", "SPR", "WIN", "SUM"]
+Q: AUT
+A: How many credits do you want to take?
+Q: 15
+Ask Func[build_schedule]: AUT Seattle 15
 """
-agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS, conversational=True)
+agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS, conversational = True)
+
 
 
 @agent.register_func
@@ -41,7 +47,7 @@ def roll(query: fixieai.Message) -> str:
 
 
 course_catalog_dict = {}
-
+quarters = ["AUT", "SPR", "WIN", "SUM"]
 
 @agent.register_func
 def get_class_information(query: fixieai.Message) -> str:
@@ -51,7 +57,6 @@ def get_class_information(query: fixieai.Message) -> str:
         course_catalog_dict = uwtools.course_catalogs(struct='dict')
 
     return course_catalog_dict[class_code][category]
-
 
 def check_time_conflict(potential_classes, num_of_credit):
     class_and_times = {}
@@ -71,3 +76,17 @@ def check_time_conflict(potential_classes, num_of_credit):
             res.append(times[i][3])
 
     return
+
+@agent.register_func
+def build_schedule(query: fixieai.Message) -> str:
+    year = 2020 #get current year
+    quarter, campus, credits = query.text.split()
+    campuses = [campus]
+    classTaken = []
+    time_schedule = uwtools.time_schedules(struct='dict',campuses = campuses, year = year, quarter = quarter, include_datetime = True)
+    classes = check_prereq(classTaken)
+
+def check_prereq(classTaken) -> list:
+    classes = []
+    return classes
+
