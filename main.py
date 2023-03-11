@@ -5,21 +5,6 @@ import uwtools
 
 BASE_PROMPT = """I'm an agent that rolls virtual dice!"""
 FEW_SHOTS = """
-Q: Roll a d20
-Ask Func[roll]: 20 1
-Func[roll] says: 12
-A: You rolled a 12!
-
-Q: Roll two dice and blow on them first for good luck
-Ask Func[roll]: 6 2
-Func[roll] says: 4 3
-A: You rolled a 4 and a 3, with a total of 7.
-
-Q: Roll 3d8
-Ask Func[roll]: 8 3
-Func[roll] says: 5 3 8
-A: You rolled 5, 3, and 8, for a total of 16.
-
 Q: Show the description of CSE133
 Ask Func[get_class_information]: CSE133 Description
 Func[get_class_information] says: Intermediate data programming. Topics include writing programs that manipulate different types of data; leveraging the growing ecosystem of tools and libraries for data programming; writing programs that are both efficient and elegant; and writing medium-scale programs (100 to 200 lines). Prerequisite: either CSE 122, CSE 123, CSE 142, CSE 143, or CSE 160.
@@ -40,8 +25,12 @@ Ask Func[get_class_information]: LING200 Credits
 Func[get_class_information] says: 5
 A: LING200 is a 5 credits class.
 
+Q: Build me a scheule for winter quarter
+A: Which uw campus are you in?
+Q: Seattle
+A:
 """
-agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS)
+agent = fixieai.CodeShotAgent(BASE_PROMPT, FEW_SHOTS, conversational=True)
 
 
 @agent.register_func
@@ -62,3 +51,23 @@ def get_class_information(query: fixieai.Message) -> str:
         course_catalog_dict = uwtools.course_catalogs(struct='dict')
 
     return course_catalog_dict[class_code][category]
+
+
+def check_time_conflict(potential_classes, num_of_credit):
+    class_and_times = {}
+    for i in range(len(time_schedule)):
+        if time_schedule[i]['Course Name'] in potential_classes:
+            class_and_times[time_schedule[i]['Course Name']] = [
+                time_schedule[i]['Start'], time_schedule[i]['End']]
+
+    times = []
+    for c in potential_classes:
+        times.append([class_and_times[c], potential_classes[c]])
+
+    times.sort()
+    res = []
+    for i in range(len(times)):
+        if times[i][1] <= times[i+1][0]:
+            res.append(times[i][3])
+
+    return
